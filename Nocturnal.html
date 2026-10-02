@@ -1,0 +1,967 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Compta de la boîte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#f6f2f8; --surface:#ffffff; --surface2:#efe9f3; --line:#ddd3e4;
+  --text:#1d1526; --muted:#6d6179; --accent:#b8317a; --accent-ink:#ffffff;
+  --amber:#e8a317; --gain:#17805a; --loss:#c4372c;
+  --pill-bg-l:88%; --pill-fg-l:26%; --focus:#b8317a;
+  --head:'Bricolage Grotesque','Figtree',system-ui,sans-serif;
+  --body:'Figtree',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15101b; --surface:#1e1728; --surface2:#2a2137; --line:#3a2f4a;
+    --text:#f1ebf6; --muted:#a99bb8; --accent:#ec5fa8; --accent-ink:#1a0f17;
+    --amber:#f6b93b; --gain:#5fd6a4; --loss:#ff7a6b;
+    --pill-bg-l:24%; --pill-fg-l:82%; --focus:#ec5fa8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15101b; --surface:#1e1728; --surface2:#2a2137; --line:#3a2f4a;
+  --text:#f1ebf6; --muted:#a99bb8; --accent:#ec5fa8; --accent-ink:#1a0f17;
+  --amber:#f6b93b; --gain:#5fd6a4; --loss:#ff7a6b;
+  --pill-bg-l:24%; --pill-fg-l:82%; --focus:#ec5fa8;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:15px/1.45 var(--body);-webkit-text-size-adjust:100%}
+h1,h2,h3{font-family:var(--head);margin:0;letter-spacing:-.01em}
+h2{font-size:1.5rem;font-weight:700}
+h3{font-size:1.05rem;font-weight:700}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.rail{position:sticky;top:0;align-self:start;height:100vh;padding:22px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:22px;background:var(--surface)}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand b{font-family:var(--head);font-size:1.15rem;line-height:1.1;overflow-wrap:anywhere}
+.mark{width:14px;height:14px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent);flex:none}
+nav{display:flex;flex-direction:column;gap:2px}
+nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:8px;color:var(--muted);font-weight:500}
+nav button:hover{background:var(--surface2);color:var(--text)}
+nav button[aria-current="page"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.mode{margin-top:auto;font-size:.8rem;color:var(--muted);padding:0 8px}
+.col{min-width:0;display:flex;flex-direction:column}
+.top{padding:18px 28px 0}
+main{padding:18px 28px 60px;max-width:1280px;width:100%}
+
+.periodbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.periodbar .grp{display:flex;gap:6px;flex-wrap:wrap}
+.chip{all:unset;cursor:pointer;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:.88rem}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+.periodbar label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:.88rem}
+
+input,select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-width:0}
+input[type=number]{width:96px;text-align:right}
+input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.btn{all:unset;cursor:pointer;background:var(--accent);color:var(--accent-ink);padding:8px 14px;border-radius:8px;font-weight:600;white-space:nowrap}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.btn.ghost:hover{border-color:var(--accent)}
+.btn.danger{background:var(--loss);color:#fff}
+.x{all:unset;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:6px;font-size:.85rem}
+.x:hover{color:var(--loss);background:var(--surface2)}
+
+.page-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:10px;margin:18px 0 16px}
+.page-head p{margin:2px 0 0;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.panel + .panel{margin-top:16px}
+.formrow{display:flex;flex-wrap:wrap;gap:10px;align-items:end}
+.formrow label{display:flex;flex-direction:column;gap:3px;font-size:.8rem;color:var(--muted)}
+.formrow label.chk{flex-direction:row;align-items:center;gap:6px;padding-bottom:8px;font-size:.9rem;color:var(--text)}
+.preview{margin-left:auto;font-family:var(--mono);font-size:.9rem;padding-bottom:8px}
+
+.scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.tbl{width:100%;border-collapse:collapse;font-size:.92rem}
+.tbl th{position:sticky;top:0;background:var(--surface2);text-align:left;font-weight:600;font-size:.82rem;color:var(--muted);padding:9px 10px;white-space:nowrap;border-bottom:1px solid var(--line)}
+.tbl th.r,.tbl td.r{text-align:right}
+.tbl td{padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td input[type=text],.tbl td input[type=date],.tbl td select{width:100%;min-width:90px;padding:5px 7px;border-color:transparent;background:transparent}
+.tbl td input:hover,.tbl td select:hover{border-color:var(--line)}
+.tbl td input[type=number]{width:84px;border-color:transparent;background:transparent;padding:5px 7px}
+.tbl tr.sec td{background:var(--surface2);font-family:var(--head);font-weight:700;padding:8px 10px}
+.tbl tfoot td{font-weight:600;background:var(--surface2)}
+.gain{color:var(--gain)} .loss{color:var(--loss)} .muted{color:var(--muted)}
+.empty{padding:34px 16px;text-align:center;color:var(--muted)}
+
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.82rem;font-weight:600;background:hsl(var(--h) 70% var(--pill-bg-l));color:hsl(var(--h) 55% var(--pill-fg-l))}
+.low{background:color-mix(in srgb,var(--loss) 14%,transparent)}
+
+.strip{display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.strip > div{padding:16px 18px;border-left:1px solid var(--line)}
+.strip > div:first-child{border-left:0}
+.strip small{display:block;color:var(--muted);font-size:.82rem}
+.strip strong{font-family:var(--head);font-size:1.7rem;font-weight:700;font-variant-numeric:tabular-nums}
+.split{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:20px;margin-top:20px;align-items:start}
+.stack > * + *{margin-top:16px}
+
+.ticket{background:#fffdf8;color:#2a2230;font-family:var(--mono);font-size:.88rem;padding:20px 20px 30px;
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/20px 100%;
+  mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/20px 100%;
+  box-shadow:0 1px 0 rgba(0,0,0,.05)}
+.ticket h3{font-family:var(--mono);font-weight:500;text-align:center;font-size:.95rem;letter-spacing:.04em}
+.ticket .sub{text-align:center;color:#7b6f86;font-size:.78rem;margin:2px 0 12px}
+.ticket .seg{display:flex;justify-content:center;gap:6px;margin-bottom:12px}
+.ticket .seg button{all:unset;cursor:pointer;border:1px dashed #9a8fa6;padding:3px 10px;font-size:.78rem}
+.ticket .seg button[aria-pressed="true"]{background:#2a2230;color:#fffdf8;border-style:solid}
+.ticket .ln{display:flex;align-items:baseline;gap:6px;padding:2px 0}
+.ticket .ln i{flex:1;border-bottom:1px dotted #9a8fa6;transform:translateY(-3px)}
+.ticket .ln.tot{font-weight:500;border-top:1px dashed #2a2230;margin-top:6px;padding-top:6px}
+.ticket .ln.big{font-size:1.05rem;font-weight:500}
+.ticket .ln .g{color:#17805a}.ticket .ln .l{color:#b3261e}
+
+.bars{display:grid;gap:8px}
+.bar{display:grid;grid-template-columns:130px 1fr 90px;gap:10px;align-items:center;font-size:.9rem}
+.bar .track{height:10px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar .track span{display:block;height:100%;background:var(--accent);border-radius:99px}
+
+.banner{background:color-mix(in srgb,var(--amber) 18%,var(--surface));border:1px solid color-mix(in srgb,var(--amber) 50%,var(--line));border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90vw}
+#toast.on{opacity:1}
+
+[hidden]{display:none!important}
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px}
+.gate .card{width:min(400px,100%);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px}
+.gate h1{font-size:1.6rem;margin:14px 0 4px}
+.gate p{color:var(--muted);margin:0 0 18px}
+.gate form{display:grid;gap:12px}
+.gate label{display:grid;gap:4px;font-size:.85rem;color:var(--muted)}
+.gate input{padding:10px 12px;font-size:1rem;color:var(--text)}
+.gate .err{color:var(--loss);min-height:1.2em;font-size:.88rem}
+.gate .btn{display:block;text-align:center;padding:11px 14px}
+.who{display:grid;gap:8px;justify-items:start;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:.9rem}
+.who b{overflow-wrap:anywhere}
+@media (max-width:900px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:column;gap:10px;padding:12px 14px;border-right:0;border-bottom:1px solid var(--line)}
+  nav{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:2px}
+  nav button{white-space:nowrap}
+  .mode{margin:0}
+  .top,main{padding-left:14px;padding-right:14px}
+  .strip{grid-template-columns:repeat(2,1fr)}
+  .strip > div:nth-child(3){border-left:0}
+  .strip > div:nth-child(n+3){border-top:1px solid var(--line)}
+  .split{grid-template-columns:1fr}
+  .bar{grid-template-columns:90px 1fr 80px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="gate" class="gate" hidden></div>
+<div class="app" id="app" hidden>
+  <aside class="rail">
+    <div class="brand"><span class="mark"></span><b id="club">Ma boîte</b></div>
+    <nav id="nav" aria-label="Sections"></nav>
+    <div class="who" id="who"></div>
+    <div class="mode" id="mode"></div>
+  </aside>
+  <div class="col">
+    <header class="top"><div class="periodbar" id="periodbar"></div></header>
+    <main id="main"></main>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+/* ============ Outils ============ */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const r2 = n => Math.round((+n || 0) * 100) / 100;
+const fmt = n => { n = r2(n); return (n < 0 ? '−' : '') + '$' + Math.abs(n).toLocaleString('fr-FR', {maximumFractionDigits: 2}); };
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const today = () => iso(new Date());
+let _n = 0;
+const uid = () => Date.now().toString(36) + (++_n).toString(36) + Math.random().toString(36).slice(2, 5);
+const fd = s => s ? s.slice(8, 10) + '/' + s.slice(5, 7) : '';
+const clone = o => JSON.parse(JSON.stringify(o));
+function deepMerge(a, b) {
+  const o = Array.isArray(a) ? a.slice() : {...a};
+  for (const k in b) o[k] = (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k])) ? deepMerge(a && a[k] || {}, b[k]) : b[k];
+  return o;
+}
+function weekRange(offset = 0) {
+  const d = new Date(); const dow = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - dow + offset * 7); const a = iso(d); d.setDate(d.getDate() + 6); return [a, iso(d)];
+}
+function monthRange() { const d = new Date(); return [iso(new Date(d.getFullYear(), d.getMonth(), 1)), iso(new Date(d.getFullYear(), d.getMonth() + 1, 0))]; }
+
+/* ============ Réglages par défaut ============ */
+const GRADES = ['PDG', 'CO-Patron', 'Responsable', 'Employé', 'CDD', 'Sécurité'];
+const HUE = {'PDG': 350, 'CO-Patron': 25, 'Responsable': 45, 'Employé': 135, 'CDD': 210, 'Sécurité': 275};
+const CATS = ['Alcool', 'Bouteille', 'Sans alcool', 'Nourriture', 'Autre'];
+const CATS_ALL = [...CATS, 'Ingrédient'];
+const DEF = {
+  nom: 'Ma boîte',
+  taxe: 10,          // % de taxes sur le bénéfice brut
+  grades: {
+    'PDG': {fixe: 0, pctCA: 0, pctBenef: 0},
+    'CO-Patron': {fixe: 0, pctCA: 0, pctBenef: 0},
+    'Responsable': {fixe: 0, pctCA: 12, pctBenef: 0},
+    'Employé': {fixe: 0, pctCA: 10, pctBenef: 0},
+    'CDD': {fixe: 0, pctCA: 5, pctBenef: 0},
+    'Sécurité': {fixe: 0, pctCA: 5, pctBenef: 0}
+  }
+};
+// [nom, catégorie de tarif, prix d'achat, prix de vente, drapeaux (B = vendu au bar, I = ingrédient, N = non stocké), recette [quantité produite, [[ingrédient, quantité], …]]]
+const SD = [
+  ['Bière Blonde','Bouteille',0,350,'BI'],
+  ['Sirop de Myrtille','Ingrédient',0,0,'I'],
+  ['Bouteille de Champagne','Bouteille',0,900,'BI'],
+  ['Bouteille de Cognac','Bouteille',0,870,'BI'],
+  ['Bouteille de Gin','Bouteille',0,870,'BI'],
+  ['Verre','Ingrédient',0,0,'I'],
+  ['Jus de Raisin','Ingrédient',0,0,'I'],
+  ['Jus de citron vert','Ingrédient',0,0,'I'],
+  ['Curaçao Bleu','Bouteille',0,850,'BI'],
+  ['Citron','Ingrédient',0,0,'I'],
+  ['Soda Citron','Sans alcool',9,55,'BI'],
+  ['Olives Méditerranéennes','Nourriture',9,70,'BI'],
+  ["Jus d'Orange Pressé",'Sans alcool',7,40,'BI'],
+  ["Jus d'Ananas",'Sans alcool',9,45,'BI'],
+  ['Mix Salé','Nourriture',9,70,'BI'],
+  ['Tonic Premium','Sans alcool',7,55,'BI'],
+  ['Nocti Cola','Sans alcool',16,80,'BI'],
+  ['Energy Nocturnal','Sans alcool',16,80,'BI'],
+  ['Bouteille de Rhum','Bouteille',0,870,'BI'],
+  ['Eau Pétillante','Sans alcool',7,80,'BI'],
+  ['Bouteille de Tequila','Bouteille',0,870,'BI'],
+  ['Bouteille de Vodka','Bouteille',0,870,'BI'],
+  ['Bouteille de Whisky','Bouteille',0,870,'BI'],
+  ['Boite de cigar','Autre',0,220,'BI'],
+  ['Paquet de Cigarette','Autre',0,190,'BI'],
+  ['Verre de Vodka','Alcool',19,95,'B',[10,[['Bouteille de Vodka',1],['Verre',10]]]],
+  ['Verre de Rhum','Alcool',19,98,'B',[10,[['Bouteille de Rhum',1],['Verre',10]]]],
+  ['Verre de Tequila','Alcool',19,98,'B',[10,[['Bouteille de Tequila',1],['Verre',10]]]],
+  ['Verre de Cognac','Alcool',19,98,'B',[10,[['Bouteille de Cognac',1],['Verre',10]]]],
+  ['Verre de Whisky','Alcool',19,98,'B',[10,[['Bouteille de Whisky',1],['Verre',10]]]],
+  ['Verre de Gin','Alcool',19,98,'B',[10,[['Bouteille de Gin',1],['Verre',10]]]],
+  ['Verre de Bière','Alcool',19,60,'B',[10,[['Bière Blonde',1],['Verre',10]]]],
+  ['Coupe de Champagne','Alcool',16,110,'B',[10,[['Bouteille de Champagne',1],['Verre',10]]]],
+  ['Verre de Curaçao','Alcool',14,90,'B',[10,[['Curaçao Bleu',1],['Verre',10]]]],
+  ['Nocturnal Signature','Alcool',35,120,'B',[1,[['Sirop de Myrtille',1],['Tonic Premium',1],['Verre de Vodka',1]]]],
+  ['Purple Dream','Alcool',40,130,'B',[1,[['Jus de Raisin',1],['Citron',1],['Verre de Vodka',1]]]],
+  ['Blue Moon','Alcool',49,130,'B',[1,[['Verre de Curaçao',1],['Jus de citron vert',1],['Verre de Vodka',1]]]],
+  ['Cig Unité','Autre',0,20,'BN'],
+  ['Cigar Unité','Autre',0,38,'BN'],
+  ['Service Chauffeur','Autre',0,3000,'BN'],
+  ['Salle VIP','Autre',0,7000,'BN'],
+  ['Privatisation','Autre',0,20000,'BN'],
+  ['Don','Autre',0,1000,'BN']
+];
+// Ajoute au catalogue les produits qui manquent (comparaison par nom) sans toucher à l'existant.
+function buildStarter() {
+  const ids = {}; S.produits.forEach(p => { ids[p.nom.toLowerCase()] = p.id; });
+  const idOf = n => (ids[n.toLowerCase()] ||= uid());
+  const have = new Set(S.produits.map(p => p.nom.toLowerCase()));
+  const add = SD.filter(r => !have.has(r[0].toLowerCase())).map(([nom, cat, achat, vente, fl, rec]) => ({
+    id: idOf(nom), nom, cat, achat, vente, bar: fl.includes('B'), ingredient: fl.includes('I'), stocke: !fl.includes('N'), seuil: 0, ajust: 0,
+    recette: rec ? {rendement: rec[0], lignes: rec[1].map(([n, q]) => ({id: idOf(n), q}))} : null
+  }));
+  return [...S.produits, ...add];
+}
+let seedTried = false;
+function maybeSeed() {
+  if (seedTried || !ready || !canManage() || L['config/produits']) return;
+  if (db && !snapDone['config/produits']) return;
+  seedTried = true; saveProduits(buildStarter());
+}
+
+/* ============ Stockage (db partagée, sinon navigateur) ============ */
+const LS_KEY = 'compta-boite-v1';
+let db = null, L = {}, S = {};
+const ui = {tab: 'dash', from: '', to: '', limit: 100, confirm: '', stk: 'bar', rec: null};
+[ui.from, ui.to] = weekRange(0);
+
+function loadLocal() { try { L = JSON.parse(localStorage.getItem(LS_KEY) || '{}'); } catch (e) { L = {}; } }
+function saveLocal() { try { localStorage.setItem(LS_KEY, JSON.stringify(L)); } catch (e) {} }
+function fail(e) {
+  const c = e && e.code;
+  toast(c === 'quota_exceeded' ? 'Base pleine : supprime d\'anciennes lignes.' :
+        c === 'invalid_argument' ? 'Modification refusée : ton niveau d\'accès est trop bas pour écrire.' :
+        'Enregistrement impossible, réessaie dans un instant.');
+}
+async function writeDoc(path, data) {
+  L[path] = data; derive(); render();
+  if (db) { try { await db.doc(path).set(data); } catch (e) { fail(e); } } else saveLocal();
+}
+async function patchDoc(path, patch) { return writeDoc(path, deepMerge(L[path] || {}, patch)); }
+async function removeDoc(path) {
+  delete L[path]; derive(); render();
+  if (db) { try { await db.doc(path).delete(); } catch (e) { fail(e); } } else saveLocal();
+}
+const colDocs = c => Object.keys(L).filter(k => k.startsWith(c + '/')).map(k => ({...L[k], id: k.slice(c.length + 1)}));
+
+function derive() {
+  S.produits = (L['config/produits'] && L['config/produits'].items) || [];
+  S.equipe = (L['config/equipe'] && L['config/equipe'].items) || [];
+  S.reg = deepMerge(DEF, L['config/reglages'] || {});
+  S.nom = (L['config/club'] || {}).nom || DEF.nom;
+  S.ventes = colDocs('ventes').sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  S.achats = colDocs('achats').sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  S.depenses = colDocs('depenses').sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  S.fabs = colDocs('fabrications').sort((a, b) => (b.date || '').localeCompare(a.date || '') || (b.createdAt || 0) - (a.createdAt || 0));
+  S.stockMap = {};
+  const SM = id => (S.stockMap[id] ||= {ach: 0, ven: 0, fab: 0, uti: 0});
+  for (const a of S.achats) SM(a.produitId).ach += +a.nombre || 0;
+  for (const v of S.ventes) SM(v.produitId).ven += +v.nombre || 0;
+  for (const f of S.fabs) { SM(f.produitId).fab += +f.sortie || 0; for (const e of f.entrees || []) SM(e.id).uti += +e.q || 0; }
+}
+const stockOf = p => { const m = S.stockMap[p.id] || {ach: 0, ven: 0, fab: 0, uti: 0}; return (+p.ajust || 0) + m.ach + m.fab - m.ven - m.uti; };
+
+let rt = 0;
+function scheduleRender() { clearTimeout(rt); rt = setTimeout(() => { derive(); render(); }, 40); }
+
+/* ============ Connexion ============ */
+const SES = 'compta-session-v1';
+let snapDone = {};
+let meId = null, meHash = null, ready = false, canSetup = true, fails = 0, lockUntil = 0, gateKey = '';
+function loadSession() { try { const x = JSON.parse(localStorage.getItem(SES) || 'null'); if (x) { meId = x.id; meHash = x.h; } } catch (e) {} }
+function saveSession() { try { localStorage.setItem(SES, meId ? JSON.stringify({id: meId, h: meHash}) : ''); } catch (e) {} }
+const me = () => { const m = S.equipe.find(x => x.id === meId); return m && m.hash && m.hash === meHash ? m : null; };
+const isPDG = () => { const m = me(); return !!m && m.grade === 'PDG'; };
+const RANK = {'PDG': 3, 'CO-Patron': 2, 'Responsable': 1};
+const rank = g => RANK[g] || 0;
+const myRank = () => { const m = me(); return m ? rank(m.grade) : 0; };
+// PDG, Co-Patron et Responsable accèdent aux pages de gestion
+const canManage = () => myRank() >= 1;
+// On ne gère que les comptes de rang inférieur au sien (le PDG gère tout le monde) ; chacun peut modifier son propre compte
+const canEditMember = m => { const x = me(); return !!x && (m.id === x.id || isPDG() || rank(m.grade) < myRank()); };
+const canAssign = g => isPDG() || rank(g) < myRank();
+const canPay = m => isPDG() || rank(m.grade) < myRank();
+const norm = x => String(x || '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '.');
+async function sha(x) {
+  try { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(x)); return Array.from(new Uint8Array(b)).map(c => c.toString(16).padStart(2, '0')).join(''); }
+  catch (e) { let h = 5381; for (const c of x) h = ((h << 5) + h + c.charCodeAt(0)) | 0; return 'x' + (h >>> 0).toString(16); }
+}
+const hashPin = (pin, salt) => sha(salt + '|' + pin);
+const MGR_ACTS = new Set(['del', 'add-membre', 'add-achat', 'add-depense', 'add-produit', 'starter', 'export', 'fabriquer', 'rec-edit', 'rec-add', 'rec-rm', 'rec-save', 'rec-cancel', 'rec-del']);
+
+async function doLogin(login, pin) {
+  if (Date.now() < lockUntil) return 'Trop d\'essais. Patiente quelques secondes.';
+  const l = norm(login), m = S.equipe.find(x => x.login === l);
+  if (m) { const h = await hashPin(pin, m.salt || ''); if (h === m.hash) { meId = m.id; meHash = h; fails = 0; saveSession(); return ''; } }
+  if (++fails >= 5) { lockUntil = Date.now() + 15000; fails = 0; }
+  return 'Identifiant ou code incorrect.';
+}
+async function doSetup(nom, login, pin) {
+  nom = nom.trim(); const l = norm(login || nom);
+  if (!nom || !l) return 'Indique ton nom et un identifiant.';
+  if (pin.length < 4) return 'Le code doit faire au moins 4 caractères.';
+  const salt = uid(), hash = await hashPin(pin, salt), m = {id: uid(), nom, grade: 'PDG', login: l, salt, hash};
+  meId = m.id; meHash = hash; saveSession();
+  await saveEquipe([m]);
+  return '';
+}
+const GATE = {
+  load: () => `<div class="card"><span class="mark"></span><h1>Chargement…</h1></div>`,
+  wait: () => `<div class="card"><span class="mark"></span><h1>${esc(S.nom)}</h1><p>Aucun compte n'a encore été créé. Le PDG doit ouvrir cette page en premier pour créer le sien.</p></div>`,
+  setup: () => `<div class="card"><span class="mark"></span><h1>Créer le compte PDG</h1><p>Premier lancement : ce compte ouvre toutes les pages. Tu créeras ensuite les comptes de l'équipe dans « Effectif & salaires ».</p>
+    <form id="gf-setup" autocomplete="off"><label>Nom et prénom<input id="g-nom" required></label>
+    <label>Identifiant de connexion<input id="g-login" placeholder="ex. prenom.nom" autocapitalize="off"></label>
+    <label>Code d'accès (4 caractères minimum)<input id="g-pin" type="password" required></label>
+    <div class="err" id="g-err"></div><button class="btn" type="submit">Créer le compte</button></form></div>`,
+  login: () => `<div class="card"><span class="mark"></span><h1>${esc(S.nom)}</h1><p>Connecte-toi avec l'identifiant donné par le PDG.</p>
+    <form id="gf-login"><label>Identifiant<input id="g-login" autocomplete="username" autocapitalize="off" required></label>
+    <label>Code d'accès<input id="g-pin" type="password" autocomplete="current-password" required></label>
+    <div class="err" id="g-err"></div><button class="btn" type="submit">Se connecter</button></form></div>`
+};
+function renderGate() {
+  const g = $('#gate'), app = $('#app');
+  const mode = !ready ? 'load' : !S.equipe.some(m => m.hash) ? (canSetup ? 'setup' : 'wait') : !me() ? 'login' : 'app';
+  if (mode === 'app') { g.hidden = true; app.hidden = false; gateKey = ''; return true; }
+  app.hidden = true; g.hidden = false;
+  if (gateKey !== mode) { gateKey = mode; g.innerHTML = GATE[mode](); const f = g.querySelector('input'); if (f) f.focus(); }
+  return false;
+}
+
+/* ============ Stockage : abonnements ============ */
+async function initStore() {
+  loadSession();
+  try { if (window.claude && claude.use) db = await claude.use('db'); } catch (e) { db = null; }
+  if (!db) { loadLocal(); ready = true; derive(); render(); return; }
+  try { const u = await claude.use('user'); if (u && typeof u.canEdit === 'function') canSetup = (await u.canEdit()) !== false; } catch (e) {}
+  const colSub = c => db.collection(c).onSnapshot(snap => {
+    for (const k of Object.keys(L)) if (k.startsWith(c + '/')) delete L[k];
+    snap.docs.forEach(d => { if (d.exists) L[c + '/' + d.id] = d.data(); });
+    scheduleRender();
+  }, e => fail(e));
+  const docSub = p => db.doc(p).onSnapshot(d => {
+    if (d.exists) L[p] = d.data(); else delete L[p];
+    snapDone[p] = true;
+    if (p === 'config/equipe') ready = true;
+    scheduleRender();
+  }, e => { if (p === 'config/equipe') ready = true; fail(e); scheduleRender(); });
+  ['ventes', 'achats', 'depenses', 'primes', 'fabrications'].forEach(colSub);
+  ['config/produits', 'config/equipe', 'config/reglages', 'config/club'].forEach(docSub);
+  setTimeout(() => { if (!ready) { ready = true; scheduleRender(); } }, 8000);
+  render();
+}
+
+/* ============ Calculs ============ */
+const inP = d => (!ui.from || d >= ui.from) && (!ui.to || d <= ui.to);
+const pkey = () => (ui.from || 'debut') + '_' + (ui.to || 'fin');
+function calcV(v) {
+  const n = +v.nombre || 0;
+  const total = v.gratuit ? 0 : r2(n * (+v.prix || 0) * (1 - (+v.remise || 0) / 100));
+  const achat = r2(n * (+v.achat || 0));
+  return {total, achat, benef: r2(total - achat)};
+}
+function compute() {
+  const R = S.reg, T = {ca: 0, cout: 0, offerts: 0, aEncaisser: 0, nbVentes: 0, dep: 0, achatsStock: 0};
+  const by = {};
+  for (const v of S.ventes) {
+    if (!inP(v.date)) continue;
+    const c = calcV(v); T.nbVentes++;
+    const st = by[v.vendeur] ||= {ca: 0, benef: 0, charges: 0};
+    if (v.gratuit) { T.offerts += c.achat; st.charges += c.achat; }
+    else if (v.paye) { T.ca += c.total; T.cout += c.achat; st.ca += c.total; st.benef += c.total - c.achat; }
+    else T.aEncaisser += c.total;
+  }
+  for (const d of S.depenses) if (inP(d.date)) T.dep += +d.montant || 0;
+  for (const a of S.achats) if (inP(a.date)) T.achatsStock += +a.total || 0;
+  const P = (L['primes/' + pkey()] || {}).par || {};
+  let salaires = 0;
+  const staff = S.equipe.map(m => {
+    const s = by[m.id] || {ca: 0, benef: 0, charges: 0};
+    const g = R.grades[m.grade] || {fixe: 0, pctCA: 0, pctBenef: 0};
+    const part = r2(s.ca * g.pctCA / 100 + Math.max(0, s.benef) * g.pctBenef / 100);
+    const pr = P[m.id] || {};
+    const salaire = r2((+g.fixe || 0) + part + (+pr.tickets || 0) + (+pr.event || 0));
+    salaires += salaire;
+    return {m, ca: r2(s.ca), benef: r2(s.benef), charges: r2(s.charges), part, tickets: +pr.tickets || 0, event: +pr.event || 0, salaire, verse: !!pr.verse};
+  });
+  const marge = r2(T.ca - T.cout), pertes = r2(T.offerts + T.dep), brut = r2(marge - pertes);
+  const taxes = r2(Math.max(0, brut) * R.taxe / 100), net = r2(brut - taxes), reste = r2(net - salaires);
+  return {T, staff, salaires: r2(salaires), marge, pertes, brut, taxes, net, reste, by};
+}
+const nomMembre = id => { const m = S.equipe.find(x => x.id === id); return m ? m.nom : ''; };
+
+/* ============ Vues ============ */
+// 3e valeur à 1 = page réservée à la direction (PDG, Co-Patron, Responsable)
+const TABS = [['dash', 'Tableau de bord'], ['ventes', 'Ventes'], ['stock', 'Stock', 1], ['equipe', 'Effectif & salaires', 1], ['achats', 'Achats & dépenses', 1], ['tarifs', 'Tarifs', 1], ['reglages', 'Réglages', 1]];
+const pill = g => `<span class="pill" style="--h:${HUE[g] ?? 0}">${esc(g)}</span>`;
+const delBtn = (col, id) => { const k = col + ':' + id; return ui.confirm === k
+  ? `<button class="x" style="color:var(--loss)" data-act="del" data-col="${col}" data-id="${id}">Confirmer ?</button>`
+  : `<button class="x" data-act="del" data-col="${col}" data-id="${id}" aria-label="Supprimer">Supprimer</button>`; };
+const gradeSel = (cur, attrs, locked) => `<select ${attrs} ${locked ? 'disabled' : ''}>${GRADES.filter(g => g === cur || canAssign(g)).map(g => `<option ${g === cur ? 'selected' : ''}>${g}</option>`).join('')}</select>`;
+const staffOpts = (cur, withEmpty) => (withEmpty ? '<option value="">—</option>' : '') + S.equipe.map(m => `<option value="${m.id}" ${m.id === cur ? 'selected' : ''}>${esc(m.nom)}</option>`).join('');
+const isBar = p => p.bar ?? (p.cat !== 'Ingrédient');
+const nomProd = id => { const p = S.produits.find(x => x.id === id); return p ? p.nom : '(supprimé)'; };
+const recText = r => r.lignes.map(l => `${l.q} × ${esc(nomProd(l.id))}`).join(' · ');
+function prodOpts(cur) {
+  return CATS.map(c => {
+    const items = S.produits.filter(p => p.cat === c && isBar(p));
+    return items.length ? `<optgroup label="${c}">${items.map(p => `<option value="${p.id}" ${p.id === cur ? 'selected' : ''}>${esc(p.nom)}</option>`).join('')}</optgroup>` : '';
+  }).join('');
+}
+// produits qu'on achète (stockés et non fabriqués)
+const purchOpts = cur => S.produits.filter(p => p.stocke && !p.recette).map(p => `<option value="${p.id}" ${p.id === cur ? 'selected' : ''}>${esc(p.nom)}</option>`).join('');
+
+function vDash() {
+  const k = compute(), T = k.T, pdg = canManage();
+  const empty = pdg && !S.produits.length;
+  const top = Object.entries(k.by).map(([id, s]) => ({nom: nomMembre(id) || '—', ca: s.ca})).sort((a, b) => b.ca - a.ca).slice(0, 6);
+  const max = Math.max(1, ...top.map(t => t.ca));
+  const low = pdg ? S.produits.filter(p => p.stocke && p.seuil > 0 && stockOf(p) <= p.seuil).sort((a, b) => stockOf(a) - stockOf(b)) : [];
+  const recent = S.ventes.filter(v => inP(v.date)).slice(0, 6);
+  const mine = k.by[meId] || {ca: 0}, myN = S.ventes.filter(v => inP(v.date) && v.vendeur === meId).length;
+  const L1 = (a, b, cls = '') => `<div class="ln ${cls}"><span>${a}</span><i></i><span class="${b < 0 ? 'l' : ''}">${fmt(b)}</span></div>`;
+  return `
+  ${empty ? `<div class="banner"><span><b>Bienvenue.</b> Charge le catalogue de départ (tes tarifs) pour commencer.</span><button class="btn" data-act="starter">Importer le catalogue de départ</button></div>` : ''}
+  <div class="page-head"><div><h2>Tableau de bord</h2><p>Résultats de la période choisie en haut de page.</p></div></div>
+  ${pdg ? `<div class="strip">
+    <div><small>Chiffre d'affaires encaissé</small><strong>${fmt(T.ca)}</strong></div>
+    <div><small>Bénéfice brut</small><strong class="${k.brut < 0 ? 'loss' : 'gain'}">${fmt(k.brut)}</strong></div>
+    <div><small>Pertes (offerts + dépenses)</small><strong class="${k.pertes > 0 ? 'loss' : ''}">${fmt(k.pertes)}</strong></div>
+    <div><small>À encaisser (impayés)</small><strong>${fmt(T.aEncaisser)}</strong></div>
+  </div>` : `<div class="strip" style="grid-template-columns:repeat(2,1fr)">
+    <div><small>Mon chiffre d'affaires encaissé</small><strong>${fmt(mine.ca)}</strong></div>
+    <div><small>Mes ventes</small><strong>${myN}</strong></div>
+  </div>`}
+  <div class="split" style="${pdg ? '' : 'grid-template-columns:1fr'}">
+    ${pdg ? `<div class="ticket">
+      <h3>BILAN DE LA PÉRIODE</h3>
+      <div class="sub">${ui.from ? fd(ui.from) + ' → ' + fd(ui.to) : 'Toutes les ventes'}</div>
+      ${L1("Chiffre d'affaires", T.ca)}
+      ${L1('Coût des produits vendus', -T.cout)}
+      ${L1('Produits offerts', -T.offerts)}
+      ${L1('Dépenses', -T.dep)}
+      ${L1('Bénéfice brut', k.brut, 'tot')}
+      ${L1('Taxes (' + S.reg.taxe + ' %)', -k.taxes)}
+      ${L1('Bénéfice net', k.net, 'tot')}
+      ${L1('Part employés (salaires)', -k.salaires)}
+      ${L1('Reste entreprise', k.reste, 'tot big')}
+    </div>` : ''}
+    <div class="stack">
+      <div class="panel"><h3>Classement des vendeurs</h3>
+        ${top.length ? `<div class="bars" style="margin-top:12px">${top.map(t => `<div class="bar"><span>${esc(t.nom)}</span><div class="track"><span style="width:${Math.round(t.ca / max * 100)}%"></span></div><span class="num">${fmt(t.ca)}</span></div>`).join('')}</div>` : '<div class="empty">Aucune vente encaissée sur cette période.</div>'}
+      </div>
+      ${pdg ? `<div class="panel"><h3>Stock à réapprovisionner</h3>
+        ${low.length ? `<div class="bars" style="margin-top:10px">${low.map(p => `<div class="bar" style="grid-template-columns:1fr auto"><span>${esc(p.nom)}</span><b class="${stockOf(p) <= 0 ? 'loss' : ''}">${stockOf(p)} <span class="muted" style="font-weight:400">/ seuil ${p.seuil}</span></b></div>`).join('')}</div>` : '<div class="empty">Rien sous le seuil d\'alerte.</div>'}
+      </div>` : ''}
+      <div class="panel"><h3>Dernières ventes</h3>
+        ${recent.length ? `<div class="bars" style="margin-top:10px">${recent.map(v => { const c = calcV(v); return `<div class="bar" style="grid-template-columns:50px 1fr auto"><span class="muted">${fd(v.date)}</span><span>${v.nombre} × ${esc(v.produit)} <span class="muted">· ${esc(v.vendeurNom || '')}</span></span><span class="num ${v.gratuit ? 'muted' : ''}">${v.gratuit ? 'offert' : fmt(c.total)}</span></div>`; }).join('')}</div>` : '<div class="empty">Pas encore de vente.</div>'}
+      </div>
+    </div>
+  </div>`;
+}
+
+function vVentes() {
+  const pdg = canManage();
+  const rows = S.ventes.filter(v => inP(v.date));
+  const shown = rows.slice(0, ui.limit);
+  let tCA = 0, tB = 0;
+  rows.forEach(v => { const c = calcV(v); if (!v.gratuit && v.paye) tCA += c.total; tB += (v.gratuit || v.paye) ? c.benef : 0; });
+  const row = v => {
+    const c = calcV(v), id = v.id;
+    if (!pdg) return `<tr><td>${fd(v.date)}</td><td>${esc(v.vendeurNom || '')}</td><td>${esc(v.client)}</td><td>${esc(v.produit)}</td><td class="num">${v.nombre}</td><td class="num">${fmt(v.prix)}</td><td class="num">${v.remise || 0}</td><td class="num"><b>${fmt(c.total)}</b></td><td>${v.gratuit ? 'oui' : ''}</td><td>${v.paye ? 'oui' : ''}</td></tr>`;
+    return `<tr>
+      <td><input type="date" data-edit="ventes" data-id="${id}" data-f="date" value="${esc(v.date)}"></td>
+      <td><select data-edit="ventes" data-id="${id}" data-f="vendeur">${staffOpts(v.vendeur, true)}</select></td>
+      <td><input type="text" data-edit="ventes" data-id="${id}" data-f="client" value="${esc(v.client)}"></td>
+      <td>${esc(v.produit)}</td>
+      <td class="r"><input type="number" data-edit="ventes" data-id="${id}" data-f="nombre" value="${v.nombre}" style="width:64px"></td>
+      <td class="r"><input type="number" step="any" data-edit="ventes" data-id="${id}" data-f="prix" value="${v.prix}"></td>
+      <td class="r"><input type="number" step="any" data-edit="ventes" data-id="${id}" data-f="remise" value="${v.remise || 0}" style="width:64px"></td>
+      <td class="num muted">${fmt(c.achat)}</td>
+      <td class="num"><b>${fmt(c.total)}</b></td>
+      <td><input type="checkbox" data-edit="ventes" data-id="${id}" data-f="gratuit" ${v.gratuit ? 'checked' : ''}></td>
+      <td><input type="checkbox" data-edit="ventes" data-id="${id}" data-f="paye" ${v.paye ? 'checked' : ''}></td>
+      <td class="num ${c.benef < 0 ? 'loss' : 'gain'}">${fmt(c.benef)}</td>
+      <td>${delBtn('ventes', id)}</td></tr>`;
+  };
+  return `
+  <div class="page-head"><div><h2>Ventes</h2><p>${pdg ? 'Chaque ligne retire automatiquement la quantité du stock.' : 'Ajoute tes ventes ici. Seule la direction peut les modifier ensuite.'}</p></div></div>
+  <div class="panel">
+    <div class="formrow">
+      <label>Date<input type="date" id="f-date" value="${today()}"></label>
+      ${pdg ? `<label>Vendeur<select id="f-vendeur">${staffOpts(meId, true)}</select></label>` : ''}
+      <label>Client<input type="text" id="f-client" placeholder="Nom du client" style="width:150px"></label>
+      <label>Produit<select id="f-produit"><option value="">Choisir…</option>${prodOpts('')}</select></label>
+      <label>Nombre<input type="number" id="f-nombre" value="1" min="1" step="1" style="width:70px"></label>
+      <label>Prix unitaire<input type="number" id="f-prix" value="0" min="0" step="any"></label>
+      <label>Remise %<input type="number" id="f-remise" value="0" min="0" max="100" step="any" style="width:70px"></label>
+      <label class="chk"><input type="checkbox" id="f-gratuit"> Offert</label>
+      <label class="chk"><input type="checkbox" id="f-paye" checked> Payé</label>
+      <button class="btn" data-act="add-vente">Ajouter la vente</button>
+      <span class="preview" id="f-preview"></span>
+    </div>
+  </div>
+  <div class="scroll" style="margin-top:16px"><table class="tbl">
+    <thead><tr><th>Date</th><th>Vendeur</th><th>Client</th><th>Produit</th><th class="r">Nb</th><th class="r">Prix</th><th class="r">Remise %</th>${pdg ? '<th class="r">Achat entr.</th>' : ''}<th class="r">Prix total</th><th>Offert</th><th>Payé</th>${pdg ? '<th class="r">Bénéfice</th><th></th>' : ''}</tr></thead>
+    <tbody>${shown.map(row).join('') || `<tr><td colspan="13" class="empty">Aucune vente sur cette période. Ajoute la première ci-dessus.</td></tr>`}</tbody>
+    ${rows.length && pdg ? `<tfoot><tr><td colspan="8">${rows.length} ligne(s)</td><td class="num">${fmt(tCA)}</td><td colspan="2"></td><td class="num">${fmt(tB)}</td><td></td></tr></tfoot>` : ''}
+  </table></div>
+  ${rows.length > ui.limit ? `<p style="text-align:center"><button class="btn ghost" data-act="more">Afficher plus (${rows.length - ui.limit} restantes)</button></p>` : ''}`;
+}
+
+function fabPreview() {
+  const el = $('#fb-preview'); if (!el) return;
+  const p = S.produits.find(x => x.id === val('fb-produit')), fois = num('fb-fois');
+  if (!p || !p.recette) { el.innerHTML = ''; return; }
+  const lack = p.recette.lignes.filter(l => { const q = S.produits.find(x => x.id === l.id); return !q || stockOf(q) < l.q * fois; }).map(l => esc(nomProd(l.id)));
+  el.innerHTML = 'Consomme ' + recText({lignes: p.recette.lignes.map(l => ({id: l.id, q: l.q * fois}))}) + ' → produit <b>' + (p.recette.rendement * fois) + ' × ' + esc(p.nom) + '</b>' +
+    (lack.length ? ' <span class="loss">· stock insuffisant : ' + lack.join(', ') + '</span>' : '');
+}
+function stockTable(items, grouped) {
+  const row = p => {
+    const m = S.stockMap[p.id] || {}, s = stockOf(p), isLow = p.seuil > 0 && s <= p.seuil;
+    const tag = isBar(p) && p.ingredient ? '<span class="muted" style="font-size:.78rem"> · bar + ingrédient</span>' : '';
+    return `<tr class="${isLow ? 'low' : ''}"><td>${esc(p.nom)}${tag}</td><td class="num">${m.ach || 0}</td><td class="num">${m.fab || 0}</td><td class="num">${(m.ven || 0) + (m.uti || 0)}</td>
+      <td class="r">${isPDG() ? `<input type="number" step="any" data-edit="inventaire" data-id="${p.id}" value="${s}" style="width:90px;font-weight:600;border-color:var(--line)" aria-label="Stock de ${esc(p.nom)}">` : `<b class="${s < 0 ? 'loss' : s === 0 ? 'muted' : ''}">${s}</b>`}</td>
+      <td class="r"><input type="number" data-edit="produit" data-id="${p.id}" data-f="seuil" value="${p.seuil || 0}" style="width:70px"></td></tr>`;
+  };
+  const body = grouped ? CATS.map(c => { const it = items.filter(p => p.cat === c); return it.length ? `<tr class="sec"><td colspan="6">${c}</td></tr>` + it.map(row).join('') : ''; }).join('') : items.map(row).join('');
+  return `<div class="scroll"><table class="tbl"><thead><tr><th>Produit</th><th class="r">Acheté</th><th class="r">Fabriqué</th><th class="r">Sorties</th><th class="r">En stock</th><th class="r">Seuil d'alerte</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+function vStock() {
+  const stk = S.produits.filter(p => p.stocke);
+  const bar = stk.filter(isBar), ing = stk.filter(p => p.ingredient);
+  if (!S.produits.length) return `<div class="page-head"><div><h2>Stock</h2></div></div><div class="panel empty">Aucun produit pour l'instant. <p><button class="btn" data-act="starter">Importer le catalogue de départ</button></p></div>`;
+  const crafted = stk.filter(p => p.recette);
+  const chip = (v, l) => `<button class="chip" data-act="stk" data-v="${v}" aria-pressed="${ui.stk === v}">${l}</button>`;
+  let view = '';
+  if (ui.stk === 'bar') view = `<p class="muted" style="margin:0 0 10px">Tout ce qui est vendu aux clients. Les boissons fabriquées augmentent ce stock ; chaque vente le diminue.</p>` + stockTable(bar, true);
+  else if (ui.stk === 'ing') view = `<p class="muted" style="margin:0 0 10px">Tout ce qui sert à confectionner les boissons. Un achat augmente le stock ; une fabrication le diminue.</p>` + stockTable(ing, false);
+  else {
+    const r = ui.rec;
+    view = `<div class="scroll"><table class="tbl"><thead><tr><th>Boisson</th><th class="r">Quantité produite</th><th>Composition</th><th></th></tr></thead><tbody>
+      ${S.produits.filter(p => p.recette).map(p => `<tr><td>${esc(p.nom)}</td><td class="num">${p.recette.rendement}</td><td>${recText(p.recette)}</td><td style="white-space:nowrap"><button class="x" data-act="rec-edit" data-id="${p.id}">Modifier</button><button class="x" data-act="rec-del" data-id="${p.id}">Supprimer</button></td></tr>`).join('') || `<tr><td colspan="4" class="empty">Aucune recette.</td></tr>`}
+      </tbody></table></div>
+      <div class="panel" style="margin-top:14px"><div class="formrow"><label>Créer ou modifier la recette de<select id="rc-produit">${prodOpts('')}</select></label><button class="btn ghost" data-act="rec-edit">Éditer</button></div></div>
+      ${r ? `<div class="panel" style="margin-top:14px"><h3>Recette : ${esc(nomProd(r.id))}</h3>
+        <div class="formrow" style="margin-top:10px"><label>Quantité produite par fabrication<input type="number" min="1" step="any" data-edit="rec" data-f="rendement" value="${r.rendement}"></label></div>
+        ${r.lignes.map((l, i) => `<div class="formrow" style="margin-top:8px"><label>Ingrédient<select data-edit="rec" data-f="ligne" data-i="${i}">${S.produits.filter(p => p.stocke && p.id !== r.id).map(p => `<option value="${p.id}" ${p.id === l.id ? 'selected' : ''}>${esc(p.nom)}</option>`).join('')}</select></label><label>Quantité<input type="number" min="0" step="any" data-edit="rec" data-f="q" data-i="${i}" value="${l.q}" style="width:80px"></label><button class="x" data-act="rec-rm" data-i="${i}">Retirer</button></div>`).join('')}
+        <div class="formrow" style="margin-top:12px"><button class="btn ghost" data-act="rec-add">Ajouter un ingrédient</button><button class="btn" data-act="rec-save">Enregistrer la recette</button><button class="btn ghost" data-act="rec-cancel">Annuler</button></div></div>` : ''}
+      <h3 style="margin:22px 0 8px">Dernières fabrications</h3>
+      <div class="scroll"><table class="tbl"><thead><tr><th>Date</th><th>Par</th><th>Boisson</th><th class="r">Produit</th><th>Ingrédients consommés</th><th></th></tr></thead><tbody>
+      ${S.fabs.slice(0, 15).map(f => `<tr><td>${fd(f.date)}</td><td>${esc(f.parNom || '—')}</td><td>${esc(f.produit)}</td><td class="num">${f.sortie}</td><td>${(f.entrees || []).map(e => e.q + ' × ' + esc(e.nom)).join(' · ')}</td><td>${delBtn('fabrications', f.id)}</td></tr>`).join('') || `<tr><td colspan="6" class="empty">Aucune fabrication enregistrée.</td></tr>`}
+      </tbody></table></div>`;
+  }
+  return `
+  <div class="page-head"><div><h2>Stock</h2><p>Stock = inventaire + achats + fabrications − ventes − ingrédients utilisés. Le PDG peut modifier directement la colonne « En stock » pour fixer le stock de départ ou corriger après un comptage du coffre.</p></div></div>
+  <div class="panel"><h3>Fabriquer une boisson</h3><div class="formrow" style="margin-top:10px">
+    <label>Date<input type="date" id="fb-date" value="${today()}"></label>
+    <label>Boisson<select id="fb-produit"><option value="">Choisir…</option>${crafted.map(p => `<option value="${p.id}">${esc(p.nom)}</option>`).join('')}</select></label>
+    <label>Nombre de fabrications<input type="number" id="fb-fois" value="1" min="1" style="width:90px"></label>
+    <button class="btn" data-act="fabriquer">Fabriquer</button></div>
+    <div id="fb-preview" class="muted" style="margin-top:10px;font-size:.88rem"></div></div>
+  <div class="formrow" style="margin:18px 0 12px">${chip('bar', `Bar (${bar.length})`)}${chip('ing', `Ingrédients (${ing.length})`)}${chip('rec', 'Recettes & fabrications')}</div>
+  ${view}`;
+}
+
+function vEquipe() {
+  const k = compute();
+  return `
+  <div class="page-head"><div><h2>Effectif & salaires</h2><p>Chaque employé se connecte avec son identifiant et son code. Tu gères les comptes de rang inférieur au tien (le PDG gère tout le monde).</p></div></div>
+  <div class="panel"><div class="formrow">
+    <label>Nom et prénom<input type="text" id="e-nom" placeholder="Prénom Nom" style="width:190px"></label>
+    <label>Identifiant<input type="text" id="e-login" placeholder="prenom.nom" style="width:150px" autocapitalize="off"></label>
+    <label>Code d'accès<input type="password" id="e-pin" placeholder="4 car. min." style="width:120px" autocomplete="new-password"></label>
+    <label>Grade${gradeSel('Employé', 'id="e-grade"')}</label>
+    <button class="btn" data-act="add-membre">Ajouter à l'effectif</button></div></div>
+  <div class="scroll" style="margin-top:16px"><table class="tbl">
+    <thead><tr><th>Effectif</th><th>Identifiant</th><th>Grade</th><th>Nouveau code</th><th class="r">Chiffre d'affaires</th><th class="r">Bénéfice</th><th class="r">Charges</th><th class="r">Part</th><th class="r">Prime tickets</th><th class="r">Prime event</th><th class="r">Salaire</th><th>Versé</th><th></th></tr></thead>
+    <tbody>${k.staff.map(s => {
+      const ed = canEditMember(s.m) ? '' : 'disabled', gl = !ed && (s.m.id !== meId || isPDG()) ? false : true, pay = canPay(s.m) ? '' : 'disabled';
+      return `<tr>
+      <td><input type="text" data-edit="membre" data-id="${s.m.id}" data-f="nom" value="${esc(s.m.nom)}" ${ed}></td>
+      <td><input type="text" data-edit="membre" data-id="${s.m.id}" data-f="login" value="${esc(s.m.login || '')}" autocapitalize="off" ${ed}></td>
+      <td>${gradeSel(s.m.grade, `data-edit="membre" data-id="${s.m.id}" data-f="grade"`, gl)}</td>
+      <td><input type="password" data-edit="pin" data-id="${s.m.id}" placeholder="Changer…" autocomplete="new-password" style="width:110px" ${ed}></td>
+      <td class="num">${fmt(s.ca)}</td><td class="num">${fmt(s.benef)}</td><td class="num muted">${fmt(s.charges)}</td><td class="num">${fmt(s.part)}</td>
+      <td class="r"><input type="number" step="any" data-edit="prime" data-id="${s.m.id}" data-f="tickets" value="${s.tickets}" ${pay}></td>
+      <td class="r"><input type="number" step="any" data-edit="prime" data-id="${s.m.id}" data-f="event" value="${s.event}" ${pay}></td>
+      <td class="num"><b>${fmt(s.salaire)}</b></td>
+      <td><input type="checkbox" data-edit="prime" data-id="${s.m.id}" data-f="verse" ${s.verse ? 'checked' : ''} ${pay}></td>
+      <td>${s.m.id === meId ? '<span class="muted">Toi</span>' : ed ? '' : delBtn('membre', s.m.id)}</td></tr>`; }).join('') || `<tr><td colspan="13" class="empty">Aucun employé. Ajoute le premier ci-dessus.</td></tr>`}</tbody>
+    ${k.staff.length ? `<tfoot><tr><td colspan="10">Total salaires de la période</td><td class="num">${fmt(k.salaires)}</td><td colspan="2"></td></tr></tfoot>` : ''}
+  </table></div>
+  <p class="muted" style="font-size:.85rem">Salaire = fixe du grade + % du CA + % du bénéfice + primes (taux dans « Réglages »). Le CA et le bénéfice comptent les ventes payées et non offertes de la période ; les charges sont le coût des produits offerts. Les primes se saisissent pour la période affichée. Tu ne peux pas modifier tes propres primes sauf si tu es PDG.</p>`;
+}
+
+function vAchats() {
+  const A = S.achats.filter(a => inP(a.date)), D = S.depenses.filter(d => inP(d.date));
+  return `
+  <div class="page-head"><div><h2>Achats & dépenses</h2><p>Un achat de stock augmente la quantité en stock. Une dépense (loyer, amende, matériel…) compte dans les pertes.</p></div></div>
+  <div class="panel"><h3>Achat de stock</h3><div class="formrow" style="margin-top:10px">
+    <label>Date<input type="date" id="a-date" value="${today()}"></label>
+    <label>Commandé par<select id="a-par">${staffOpts('', true)}</select></label>
+    <label>Produit<select id="a-produit"><option value="">Choisir…</option>${purchOpts('')}</select></label>
+    <label>Nombre<input type="number" id="a-nombre" value="1" min="1" style="width:80px"></label>
+    <label>Prix unitaire<input type="number" id="a-pu" value="0" min="0" step="any"></label>
+    <button class="btn" data-act="add-achat">Enregistrer l'achat</button></div></div>
+  <div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>Date</th><th>Commandé par</th><th>Produit</th><th class="r">Nombre</th><th class="r">Prix unitaire</th><th class="r">Prix total payé</th><th></th></tr></thead>
+    <tbody>${A.map(a => `<tr><td>${fd(a.date)}</td><td>${esc(a.parNom || '—')}</td><td>${esc(a.produit)}</td><td class="num">${a.nombre}</td><td class="num">${fmt(a.pu)}</td><td class="num"><b>${fmt(a.total)}</b></td><td>${delBtn('achats', a.id)}</td></tr>`).join('') || `<tr><td colspan="7" class="empty">Aucun achat sur cette période.</td></tr>`}</tbody></table></div>
+  <div class="panel" style="margin-top:20px"><h3>Dépense</h3><div class="formrow" style="margin-top:10px">
+    <label>Date<input type="date" id="d-date" value="${today()}"></label>
+    <label>Libellé<input type="text" id="d-lib" placeholder="Ex. Loyer, réparation…" style="width:220px"></label>
+    <label>Montant<input type="number" id="d-montant" value="0" min="0" step="any"></label>
+    <button class="btn" data-act="add-depense">Enregistrer la dépense</button></div></div>
+  <div class="scroll" style="margin-top:12px"><table class="tbl"><thead><tr><th>Date</th><th>Libellé</th><th class="r">Montant</th><th></th></tr></thead>
+    <tbody>${D.map(d => `<tr><td>${fd(d.date)}</td><td>${esc(d.libelle)}</td><td class="num loss">${fmt(d.montant)}</td><td>${delBtn('depenses', d.id)}</td></tr>`).join('') || `<tr><td colspan="4" class="empty">Aucune dépense sur cette période.</td></tr>`}</tbody></table></div>`;
+}
+
+function vTarifs() {
+  return `
+  <div class="page-head"><div><h2>Tarifs</h2><p>« Bar » = vendu aux clients. « Ingrédient » = sert à fabriquer ou s'achète pour le bar. « Stocké » = la quantité est suivie dans le stock.</p></div></div>
+  <div class="panel"><div class="formrow">
+    <label>Produit<input type="text" id="t-nom" placeholder="Nom du produit" style="width:200px"></label>
+    <label>Catégorie<select id="t-cat">${CATS_ALL.map(c => `<option>${c}</option>`).join('')}</select></label>
+    <label>Prix d'achat<input type="number" id="t-achat" value="0" min="0" step="any"></label>
+    <label>Prix de vente<input type="number" id="t-vente" value="0" min="0" step="any"></label>
+    <label class="chk"><input type="checkbox" id="t-bar" checked> Vendu au bar</label>
+    <label class="chk"><input type="checkbox" id="t-ing"> Ingrédient</label>
+    <label class="chk"><input type="checkbox" id="t-stocke" checked> Stocké</label>
+    <button class="btn" data-act="add-produit">Ajouter le produit</button></div></div>
+  <div class="scroll" style="margin-top:16px"><table class="tbl"><thead><tr><th>Produit</th><th>Catégorie</th><th class="r">Prix d'achat</th><th class="r">Prix de vente</th><th class="r">Marge</th><th>Bar</th><th>Ingrédient</th><th>Stocké</th><th></th></tr></thead><tbody>
+  ${CATS_ALL.map(c => { const it = S.produits.filter(p => p.cat === c); return it.length ? `<tr class="sec"><td colspan="9">${c === 'Ingrédient' ? 'Ingrédients (non vendus)' : c}</td></tr>` + it.map(p => `<tr>
+    <td><input type="text" data-edit="produit" data-id="${p.id}" data-f="nom" value="${esc(p.nom)}"></td>
+    <td><select data-edit="produit" data-id="${p.id}" data-f="cat">${CATS_ALL.map(x => `<option ${x === p.cat ? 'selected' : ''}>${x}</option>`).join('')}</select></td>
+    <td class="r"><input type="number" step="any" data-edit="produit" data-id="${p.id}" data-f="achat" value="${p.achat}"></td>
+    <td class="r"><input type="number" step="any" data-edit="produit" data-id="${p.id}" data-f="vente" value="${p.vente}"></td>
+    <td class="num ${p.vente - p.achat < 0 ? 'loss' : 'gain'}">${p.vente ? fmt(p.vente - p.achat) : '—'}</td>
+    <td><input type="checkbox" data-edit="produit" data-id="${p.id}" data-f="bar" ${isBar(p) ? 'checked' : ''}></td>
+    <td><input type="checkbox" data-edit="produit" data-id="${p.id}" data-f="ingredient" ${p.ingredient ? 'checked' : ''}></td>
+    <td><input type="checkbox" data-edit="produit" data-id="${p.id}" data-f="stocke" ${p.stocke ? 'checked' : ''}></td>
+    <td>${delBtn('produit', p.id)}</td></tr>`).join('') : ''; }).join('') || `<tr><td colspan="9" class="empty">Aucun produit. Ajoutes-en un ci-dessus.</td></tr>`}
+  </tbody></table></div>
+  <p class="muted" style="font-size:.85rem">Modifier un prix n'altère pas les ventes déjà enregistrées : elles gardent le prix et le coût du moment. Les recettes se règlent dans Stock › Recettes.</p>`;
+}
+
+function vReglages() {
+  const R = S.reg;
+  return `
+  <div class="page-head"><div><h2>Réglages</h2><p>Les taux de départ sont des valeurs d'exemple : adapte-les aux règles de ton serveur.</p></div></div>
+  <div class="panel"><div class="formrow">
+    <label>Nom de la boîte<input type="text" data-edit="club" data-f="nom" value="${esc(S.nom)}" style="width:220px"></label>
+    <label>Taxes (% du bénéfice brut)<input type="number" step="any" data-edit="reg" data-f="taxe" value="${R.taxe}"></label>
+  </div></div>
+  <div class="scroll" style="margin-top:16px"><table class="tbl"><thead><tr><th>Grade</th><th class="r">Salaire fixe</th><th class="r">% du CA perso</th><th class="r">% du bénéfice perso</th></tr></thead><tbody>
+  ${GRADES.map(g => `<tr><td>${pill(g)}</td>
+    <td class="r"><input type="number" step="any" data-edit="grade" data-g="${g}" data-f="fixe" value="${R.grades[g].fixe}"></td>
+    <td class="r"><input type="number" step="any" data-edit="grade" data-g="${g}" data-f="pctCA" value="${R.grades[g].pctCA}"></td>
+    <td class="r"><input type="number" step="any" data-edit="grade" data-g="${g}" data-f="pctBenef" value="${R.grades[g].pctBenef}"></td></tr>`).join('')}
+  </tbody></table></div>
+  <div class="panel" style="margin-top:16px"><h3>Données</h3>
+    <p class="muted" style="margin:6px 0 12px">Exporte les ventes de la période affichée en CSV (lisible dans Excel ou Google Sheets).</p>
+    <div class="formrow"><button class="btn ghost" data-act="export">Exporter les ventes (CSV)</button>
+    <button class="btn ghost" data-act="starter">Ajouter les produits manquants du catalogue</button></div></div>`;
+}
+
+/* ============ Rendu ============ */
+function render() {
+  if (!renderGate()) return;
+  const main = $('#main'); if (!main) return;
+  const keep = {}; main.querySelectorAll('[id]').forEach(el => { if (el.matches('input,select')) keep[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+  const act = document.activeElement, actId = act && act.id && main.contains(act) ? act.id : '';
+  let selS = null, selE = null; try { if (actId) { selS = act.selectionStart; selE = act.selectionEnd; } } catch (e) {}
+
+  const m = me();
+  $('#club').textContent = S.nom;
+  document.title = S.nom + ' — Compta';
+  const tabs = TABS.filter(t => !t[2] || canManage());
+  if (!tabs.some(t => t[0] === ui.tab)) ui.tab = 'dash';
+  $('#nav').innerHTML = tabs.map(([k, l]) => `<button data-act="tab" data-v="${k}" ${ui.tab === k ? 'aria-current="page"' : ''}>${l}</button>`).join('');
+  $('#who').innerHTML = `<b>${esc(m.nom)}</b>${pill(m.grade)}<button class="chip" data-act="logout">Se déconnecter</button>`;
+  $('#mode').textContent = db ? 'Données partagées avec l\'équipe' : 'Données enregistrées sur cet appareil uniquement';
+  const showP = !['tarifs', 'reglages', 'stock'].includes(ui.tab);
+  const [w0, w1] = weekRange(0), [p0, p1] = weekRange(-1), [m0, m1] = monthRange();
+  const is = (a, b) => ui.from === a && ui.to === b;
+  $('#periodbar').innerHTML = showP ? `<span class="muted" style="font-size:.88rem">Période</span><div class="grp">
+    <button class="chip" data-act="period" data-a="${w0}" data-b="${w1}" aria-pressed="${is(w0, w1)}">Cette semaine</button>
+    <button class="chip" data-act="period" data-a="${p0}" data-b="${p1}" aria-pressed="${is(p0, p1)}">Semaine dernière</button>
+    <button class="chip" data-act="period" data-a="${m0}" data-b="${m1}" aria-pressed="${is(m0, m1)}">Ce mois-ci</button>
+    <button class="chip" data-act="period" data-a="" data-b="" aria-pressed="${is('', '')}">Tout</button></div>
+    <label>du <input type="date" id="p-from" value="${ui.from}"></label><label>au <input type="date" id="p-to" value="${ui.to}"></label>` : '';
+
+  const V = {dash: vDash, ventes: vVentes, stock: vStock, equipe: vEquipe, achats: vAchats, tarifs: vTarifs, reglages: vReglages}[ui.tab];
+  main.innerHTML = V();
+
+  for (const id in keep) { const el = document.getElementById(id); if (el && main.contains(el)) { if (el.type === 'checkbox') el.checked = keep[id]; else el.value = keep[id]; } }
+  if (actId) { const el = document.getElementById(actId); if (el) { el.focus(); try { if (selS != null) el.setSelectionRange(selS, selE); } catch (e) {} } }
+  preview(); fabPreview(); maybeSeed();
+}
+function preview() {
+  const el = $('#f-preview'); if (!el) return;
+  const n = +$('#f-nombre').value || 0, p = +$('#f-prix').value || 0, r = +$('#f-remise').value || 0;
+  el.textContent = $('#f-gratuit').checked ? 'Offert : $0' : 'Total : ' + fmt(n * p * (1 - r / 100));
+}
+let tt = 0;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 3200); }
+
+/* ============ Actions ============ */
+const val = id => { const el = document.getElementById(id); return el ? (el.type === 'checkbox' ? el.checked : el.value) : ''; };
+const num = id => parseFloat(val(id)) || 0;
+
+async function saveProduits(items) { return writeDoc('config/produits', {items}); }
+async function saveEquipe(items) { return writeDoc('config/equipe', {items}); }
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (MGR_ACTS.has(a) && !canManage()) return toast('Action réservée à la direction.');
+  if (a !== 'del') ui.confirm = '';
+  if (a === 'logout') { meId = null; meHash = null; saveSession(); gateKey = ''; ui.tab = 'dash'; render(); }
+  else if (a === 'tab') { ui.tab = b.dataset.v; ui.limit = 100; render(); }
+  else if (a === 'more') { ui.limit += 200; render(); }
+  else if (a === 'period') { ui.from = b.dataset.a; ui.to = b.dataset.b; render(); }
+  else if (a === 'del') {
+    const k = b.dataset.col + ':' + b.dataset.id;
+    if (ui.confirm !== k) { ui.confirm = k; render(); return; }
+    ui.confirm = '';
+    const c = b.dataset.col, id = b.dataset.id;
+    if (c === 'produit') {
+      await saveProduits(S.produits.filter(p => p.id !== id).map(p => {
+        if (!p.recette) return p;
+        const lignes = p.recette.lignes.filter(l => l.id !== id);
+        return {...p, recette: lignes.length ? {...p.recette, lignes} : null};
+      }));
+    }
+    else if (c === 'membre') {
+      const cur = S.equipe.find(m => m.id === id);
+      if (!cur || id === meId) return toast('Tu ne peux pas supprimer ton propre compte.');
+      if (!canEditMember(cur)) return toast('Tu ne peux pas supprimer un compte de rang supérieur ou égal au tien.');
+      await saveEquipe(S.equipe.filter(m => m.id !== id));
+    }
+    else await removeDoc(c + '/' + id);
+  }
+  else if (a === 'add-vente') {
+    const p = S.produits.find(x => x.id === val('f-produit'));
+    if (!p) return toast('Choisis un produit.');
+    const n = num('f-nombre'); if (n <= 0) return toast('Indique un nombre supérieur à 0.');
+    const vendeur = (canManage() && val('f-vendeur')) || meId;
+    const v = {date: val('f-date') || today(), vendeur, vendeurNom: nomMembre(vendeur), client: val('f-client'), produitId: p.id, produit: p.nom,
+      nombre: n, prix: num('f-prix'), remise: num('f-remise'), achat: +p.achat || 0, gratuit: val('f-gratuit'), paye: val('f-paye'), createdAt: Date.now()};
+    document.getElementById('f-nombre').value = 1; document.getElementById('f-remise').value = 0; document.getElementById('f-gratuit').checked = false;
+    await writeDoc('ventes/' + uid(), v);
+    if (canManage() && p.stocke && stockOf(p) <= 0) toast('Attention : stock de « ' + p.nom + ' » épuisé.');
+  }
+  else if (a === 'add-membre') {
+    const nom = val('e-nom').trim(), login = norm(val('e-login') || nom), pin = val('e-pin'), grade = val('e-grade');
+    if (!nom) return toast('Indique un nom.');
+    if (pin.length < 4) return toast('Le code doit faire au moins 4 caractères.');
+    if (!canAssign(grade)) return toast('Tu ne peux pas créer un compte de ce grade.');
+    if (S.equipe.some(m => m.login === login)) return toast('Cet identifiant existe déjà.');
+    const salt = uid(), hash = await hashPin(pin, salt);
+    ['e-nom', 'e-login', 'e-pin'].forEach(i => document.getElementById(i).value = '');
+    await saveEquipe([...S.equipe, {id: uid(), nom, grade, login, salt, hash}]);
+  }
+  else if (a === 'add-achat') {
+    const p = S.produits.find(x => x.id === val('a-produit')); if (!p) return toast('Choisis un produit.');
+    const n = num('a-nombre'); if (n <= 0) return toast('Indique un nombre supérieur à 0.');
+    const pu = num('a-pu'), par = val('a-par');
+    document.getElementById('a-nombre').value = 1;
+    await writeDoc('achats/' + uid(), {date: val('a-date') || today(), par, parNom: nomMembre(par), produitId: p.id, produit: p.nom, nombre: n, pu, total: r2(n * pu), createdAt: Date.now()});
+  }
+  else if (a === 'add-depense') {
+    const lib = val('d-lib').trim(), m = num('d-montant'); if (!lib || m <= 0) return toast('Indique un libellé et un montant.');
+    document.getElementById('d-lib').value = ''; document.getElementById('d-montant').value = 0;
+    await writeDoc('depenses/' + uid(), {date: val('d-date') || today(), libelle: lib, montant: m, createdAt: Date.now()});
+  }
+  else if (a === 'add-produit') {
+    const nom = val('t-nom').trim(); if (!nom) return toast('Indique un nom de produit.');
+    document.getElementById('t-nom').value = '';
+    await saveProduits([...S.produits, {id: uid(), nom, cat: val('t-cat'), achat: num('t-achat'), vente: num('t-vente'), bar: val('t-bar'), ingredient: val('t-ing'), stocke: val('t-stocke'), seuil: 0, ajust: 0, recette: null}]);
+  }
+  else if (a === 'starter') {
+    const before = S.produits.length, items = buildStarter();
+    await saveProduits(items);
+    toast(items.length > before ? (items.length - before) + ' produit(s) ajouté(s).' : 'Le catalogue est déjà complet.');
+  }
+  else if (a === 'stk') { ui.stk = b.dataset.v; render(); }
+  else if (a === 'fabriquer') {
+    const p = S.produits.find(x => x.id === val('fb-produit'));
+    if (!p || !p.recette) return toast('Choisis une boisson à fabriquer.');
+    const fois = num('fb-fois'); if (fois <= 0) return toast('Indique un nombre supérieur à 0.');
+    const manque = p.recette.lignes.some(l => { const q = S.produits.find(x => x.id === l.id); return !q || stockOf(q) < l.q * fois; });
+    document.getElementById('fb-fois').value = 1;
+    await writeDoc('fabrications/' + uid(), {date: val('fb-date') || today(), produitId: p.id, produit: p.nom, fois, sortie: p.recette.rendement * fois,
+      entrees: p.recette.lignes.map(l => ({id: l.id, nom: nomProd(l.id), q: l.q * fois})), par: meId, parNom: me().nom, createdAt: Date.now()});
+    toast(manque ? 'Fabrication enregistrée, mais un ingrédient passe en négatif.' : 'Fabrication enregistrée.');
+  }
+  else if (a === 'rec-edit') {
+    const id = b.dataset.id || val('rc-produit'), p = S.produits.find(x => x.id === id); if (!p) return;
+    ui.rec = p.recette ? {id, rendement: p.recette.rendement, lignes: clone(p.recette.lignes)} : {id, rendement: 1, lignes: []};
+    ui.stk = 'rec'; render();
+  }
+  else if (a === 'rec-add') {
+    if (!ui.rec) return;
+    const first = S.produits.find(p => p.stocke && p.id !== ui.rec.id);
+    if (first) { ui.rec.lignes.push({id: first.id, q: 1}); render(); }
+  }
+  else if (a === 'rec-rm') { if (ui.rec) { ui.rec.lignes.splice(+b.dataset.i, 1); render(); } }
+  else if (a === 'rec-cancel') { ui.rec = null; render(); }
+  else if (a === 'rec-save') {
+    const r = ui.rec; if (!r) return;
+    if (!r.lignes.length || r.lignes.some(l => !(l.q > 0))) return toast('Ajoute au moins un ingrédient, avec une quantité supérieure à 0.');
+    if (!(r.rendement > 0)) return toast('La quantité produite doit être supérieure à 0.');
+    ui.rec = null;
+    await saveProduits(S.produits.map(p => p.id === r.id ? {...p, stocke: true, recette: {rendement: r.rendement, lignes: r.lignes}} : p));
+    toast('Recette enregistrée.');
+  }
+  else if (a === 'rec-del') { await saveProduits(S.produits.map(p => p.id === b.dataset.id ? {...p, recette: null} : p)); }
+  else if (a === 'export') {
+    let dl = null; try { dl = window.claude && await claude.use('downloads'); } catch (er) {}
+    if (!dl) return toast('Export indisponible ici.');
+    const rows = S.ventes.filter(v => inP(v.date)).map(v => { const c = calcV(v); return [v.date, v.vendeurNom, v.client, v.produit, v.nombre, v.prix, v.remise || 0, c.achat, c.total, v.gratuit ? 'oui' : 'non', v.paye ? 'oui' : 'non', c.benef]; });
+    const csv = [['Date', 'Vendeur', 'Client', 'Produit', 'Nombre', 'Prix', 'Remise %', 'Achat entreprise', 'Prix total', 'Offert', 'Payé', 'Bénéfice']].concat(rows)
+      .map(r => r.map(x => '"' + String(x ?? '').replace(/"/g, '""') + '"').join(';')).join('\n');
+    try { await dl.save({filename: 'ventes.csv', data: '\ufeff' + csv}); } catch (er) { if (er && er.code !== 'declined') toast('Export impossible.'); }
+  }
+});
+
+document.addEventListener('change', async e => {
+  const t = e.target;
+  if (t.id === 'p-from' || t.id === 'p-to') { ui.from = $('#p-from').value; ui.to = $('#p-to').value; render(); return; }
+  if (t.id === 'fb-produit' || t.id === 'fb-fois') { fabPreview(); return; }
+  if (t.id === 'f-produit') { const p = S.produits.find(x => x.id === t.value); if (p) $('#f-prix').value = p.vente; preview(); return; }
+  if (t.id === 'a-produit') { const p = S.produits.find(x => x.id === t.value); if (p) $('#a-pu').value = p.achat; return; }
+  const kind = t.dataset.edit; if (!kind) return;
+  if (!canManage()) return;
+  const f = t.dataset.f, id = t.dataset.id;
+  const v = t.type === 'checkbox' ? t.checked : t.type === 'number' ? (parseFloat(t.value) || 0) : t.value;
+  if (kind === 'ventes') {
+    const patch = {[f]: v}; if (f === 'vendeur') patch.vendeurNom = nomMembre(v);
+    await patchDoc('ventes/' + id, patch);
+  }
+  else if (kind === 'produit') await saveProduits(S.produits.map(p => p.id === id ? {...p, [f]: v} : p));
+  else if (kind === 'rec') {
+    if (!ui.rec) return;
+    const i = +t.dataset.i;
+    if (f === 'rendement') ui.rec.rendement = parseFloat(t.value) || 1;
+    else if (f === 'ligne') ui.rec.lignes[i].id = t.value;
+    else if (f === 'q') ui.rec.lignes[i].q = parseFloat(t.value) || 0;
+    render();
+  }
+  else if (kind === 'membre') {
+    const cur = S.equipe.find(m => m.id === id); if (!cur) return;
+    if (!canEditMember(cur)) { toast('Tu ne peux pas modifier un compte de rang supérieur ou égal au tien.'); return render(); }
+    let nv = v;
+    if (f === 'login') { nv = norm(v); if (!nv || S.equipe.some(m => m.id !== id && m.login === nv)) { toast('Identifiant vide ou déjà utilisé.'); return render(); } }
+    if (f === 'grade') {
+      if (!canAssign(v) || (cur.id === meId && !isPDG())) { toast('Tu ne peux pas attribuer ce grade.'); return render(); }
+      if (cur.grade === 'PDG' && v !== 'PDG' && !S.equipe.some(m => m.id !== id && m.grade === 'PDG' && m.hash)) { toast('Il doit rester au moins un PDG.'); return render(); }
+    }
+    await saveEquipe(S.equipe.map(m => m.id === id ? {...m, [f]: nv} : m));
+  }
+  else if (kind === 'pin') {
+    const cur = S.equipe.find(m => m.id === id); if (!cur) return;
+    if (!canEditMember(cur)) { toast('Tu ne peux pas modifier un compte de rang supérieur ou égal au tien.'); return render(); }
+    if (String(v).length < 4) { toast('Le code doit faire au moins 4 caractères.'); return render(); }
+    const salt = uid(), hash = await hashPin(String(v), salt);
+    if (id === meId) { meHash = hash; saveSession(); }
+    t.value = '';
+    await saveEquipe(S.equipe.map(m => m.id === id ? {...m, salt, hash} : m));
+    toast('Code mis à jour.');
+  }
+  else if (kind === 'club') await writeDoc('config/club', {nom: String(v).trim() || DEF.nom});
+  else if (kind === 'prime') {
+    const cur = S.equipe.find(m => m.id === id);
+    if (!cur || !canPay(cur)) { toast('Tu ne peux pas modifier ces primes.'); return render(); }
+    await patchDoc('primes/' + pkey(), {par: {[id]: {[f]: v}}});
+  }
+  else if (kind === 'grade') await patchDoc('config/reglages', {grades: {[t.dataset.g]: {[f]: v}}});
+  else if (kind === 'reg') await patchDoc('config/reglages', {[f]: v});
+  else if (kind === 'inventaire') {
+    if (!isPDG()) { toast('Seul le PDG peut modifier le stock.'); return render(); }
+    if (t.value === '') return render();
+    const p = S.produits.find(x => x.id === id); if (!p) return;
+    await saveProduits(S.produits.map(x => x.id === id ? {...x, ajust: (+x.ajust || 0) + (parseFloat(t.value) || 0) - stockOf(p)} : x));
+    toast('Stock de « ' + p.nom + ' » mis à jour.');
+  }
+});
+document.addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = e.target, err = $('#g-err'); if (!err) return;
+  if (f.id === 'gf-login') {
+    const r = await doLogin($('#g-login').value, $('#g-pin').value);
+    if (r) { err.textContent = r; $('#g-pin').value = ''; } else { ui.tab = 'dash'; gateKey = ''; render(); }
+  } else if (f.id === 'gf-setup') {
+    const r = await doSetup($('#g-nom').value, $('#g-login').value, $('#g-pin').value);
+    if (r) err.textContent = r; else { ui.tab = 'dash'; gateKey = ''; render(); }
+  }
+});
+document.addEventListener('input', e => { const i = e.target.id || ''; if (i.startsWith('f-')) preview(); else if (i.startsWith('fb-')) fabPreview(); });
+
+loadSession(); derive(); render(); initStore();
+</script>
+</body>
+</html>
